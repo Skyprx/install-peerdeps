@@ -54,14 +54,21 @@ async function getCliInstallCommand(extraArgs) {
     // non-whitespace line written to stdout
     const cli = spawnCli([...extraArgs, "--dry-run"]);
     const fullstdout = [];
+    const fullstderr = [];
     cli.stdout.on("data", data => {
       // not guaranteed to be line-by-line in fact these can be Buffers
-      fullstdout.push(data);
+      fullstdout.push(String(data));
     });
-    cli.on("close", () => {
+    cli.stderr.on("data", data => {
+      // not guaranteed to be line-by-line in fact these can be Buffers
+      fullstderr.push(String(data));
+    });
+    cli.on("close", code => {
+      if (code !== 0) {
+        reject(new Error(`Unsuccessful exit code. ${fullstderr}`));
+      }
       // The command will be the last non-whitespace line written to
       // stdout by the cli during a dry run
-
       const lines = fullstdout
         .join("")
         .split(/\r?\n/g)
@@ -123,7 +130,7 @@ test("adds explicit `--save-dev` flag when using `-D, -d, --dev` with NPM", asyn
       flags.map(flag => getCliInstallCommand(["eslint-config-airbnb", flag]))
     );
     commands.forEach((command, i) =>
-      t.equal(/ --save-dev /.test(command), true, `flag: \`${flags[i]}\``)
+      t.equal(/ --save-dev\b/.test(command), true, `flag: \`${flags[i]}\``)
     );
   } catch (err) {
     t.fail(err);
@@ -202,7 +209,11 @@ test("installs with pnpm successfully", t => {
     const hasPnpmLockYaml = fs.existsSync(pnpmLockYamlPath);
     t.equal(hasPnpmLockYaml, true);
     // Delete pnpm-lock.yaml file
-    fs.unlinkSync(pnpmLockYamlPath);
+    try {
+      fs.unlinkSync(pnpmLockYamlPath);
+    } catch (e) {
+      /**/
+    }
     t.end();
   });
 });

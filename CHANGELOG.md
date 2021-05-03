@@ -1,3 +1,19 @@
+# 3.0.3
+
+- Revert quotes around package name
+
+# 3.0.2
+
+- Merge #126 - don't coerce version strings to semver, quote package names
+
+# 3.0.1
+
+- Merge #124 - add .cmd suffix to spawned commands on windows
+
+# 3.0.0
+
+- Merge #85 by @amclin - use package manager to get info, resolving #72 and #73
+
 # 2.0.3
 
 - Merge #88 by @cdierkens - set the default registry to the official registry.npmjs.org, resolving #87
